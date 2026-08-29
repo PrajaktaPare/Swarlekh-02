@@ -38,10 +38,14 @@ create table if not exists exam_sessions (
 );
 
 -- 4. Auto create profile on signup
+-- IMPORTANT: runs under Supabase's restricted signup-trigger role, whose
+-- default search_path does NOT include "public" — table references must be
+-- schema-qualified and search_path set explicitly, or every signup fails
+-- with "relation profiles does not exist" even though the table exists.
 create or replace function handle_new_user()
 returns trigger as $$
 begin
-  insert into profiles (id, name, email, role, institution)
+  insert into public.profiles (id, name, email, role, institution)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'name', 'User'),
@@ -51,7 +55,7 @@ begin
   );
   return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
 
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created

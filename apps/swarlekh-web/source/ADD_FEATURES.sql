@@ -17,10 +17,15 @@ alter table profiles add column if not exists approved boolean default true;
 update profiles set approved = true where approved is null;
 
 -- Update the signup trigger so new teachers default to unapproved.
+-- IMPORTANT: this function is invoked by Supabase's internal signup trigger,
+-- which runs under a restricted role whose default search_path does NOT
+-- include "public". Table references must be schema-qualified (public.profiles)
+-- and search_path must be set explicitly, or every signup fails with
+-- "relation profiles does not exist" even though the table clearly exists.
 create or replace function handle_new_user()
 returns trigger as $$
 begin
-  insert into profiles (id, name, email, role, institution, approved)
+  insert into public.profiles (id, name, email, role, institution, approved)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'name', 'User'),
@@ -31,7 +36,7 @@ begin
   );
   return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
 
 -- IMPORTANT: the original "own profile" policy in SUPABASE_SETUP.sql lets a
 -- user update every column on their own row -- including role and approved.
@@ -42,14 +47,14 @@ create or replace function prevent_self_privilege_escalation()
 returns trigger as $$
 begin
   if (new.role is distinct from old.role or new.approved is distinct from old.approved) then
-    if not exists (select 1 from profiles where id = auth.uid() and role = 'admin') then
+    if not exists (select 1 from public.profiles where id = auth.uid() and role = 'admin') then
       new.role := old.role;
       new.approved := old.approved;
     end if;
   end if;
   return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
 
 drop trigger if exists on_profile_update_guard on profiles;
 create trigger on_profile_update_guard
