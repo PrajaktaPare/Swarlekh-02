@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase, ExamSession, Exam, QuestionGrade } from '../../lib/supabase'
+import { isLemmaConfigured, runAiGrading } from '../../lib/lemma'
 import { useParams } from 'react-router-dom'
-import { Download, User, Clock, CheckCircle, ChevronDown, ChevronUp, Save } from 'lucide-react'
+import { Download, User, Clock, CheckCircle, ChevronDown, ChevronUp, Save, Sparkles } from 'lucide-react'
 import Layout from '../../components/layout/Layout'
 import jsPDF from 'jspdf'
 import toast from 'react-hot-toast'
@@ -17,6 +18,7 @@ export default function Submissions() {
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [savingGrade, setSavingGrade] = useState<string | null>(null)
+  const [aiGrading, setAiGrading] = useState<string | null>(null)
 
   useEffect(() => { if (profile?.id) fetchExams() }, [profile])
   useEffect(() => { if (selectedExam) fetchSessions(selectedExam) }, [selectedExam])
@@ -77,6 +79,34 @@ export default function Submissions() {
       grading[questionId] = { ...(grading[questionId] || {}), [field]: value }
       return { ...s, grading }
     }))
+  }
+
+  const runGrading = async (session: ExamSession) => {
+    if (!exam || !profile) return
+    setAiGrading(session.id)
+    try {
+      const { results, skipped } = await runAiGrading(
+        exam,
+        session,
+        { name: profile.name, email: profile.email, institution: profile.institution },
+        { name: session.student?.name || 'Student', email: session.student?.email || '', institution: session.student?.institution }
+      )
+      const grading = { ...(session.grading || {}) }
+      Object.entries(results).forEach(([qId, r]) => {
+        grading[qId] = { ...(grading[qId] || {}), ai_score: r.ai_score, ai_feedback: r.ai_feedback }
+        if (exam.grading_mode === 'ai') grading[qId].final_score = r.ai_score
+      })
+      const { error } = await supabase.from('exam_sessions').update({ grading }).eq('id', session.id)
+      if (error) throw error
+      setSessions(prev => prev.map(s => s.id === session.id ? { ...s, grading } : s))
+      const gradedCount = Object.keys(results).length
+      const skippedCount = Object.keys(skipped).length
+      toast.success(`AI graded ${gradedCount} question${gradedCount === 1 ? '' : 's'}${skippedCount ? `, skipped ${skippedCount}` : ''}`)
+    } catch (err: any) {
+      toast.error(err?.message || 'AI grading failed. Check that the Lemma pod is running and reachable.')
+    } finally {
+      setAiGrading(null)
+    }
   }
 
   const saveGrading = async (session: ExamSession) => {
@@ -181,6 +211,18 @@ export default function Submissions() {
 
                   {expandedId === session.id && (
                     <div className="mt-4 pt-4 border-t border-gray-100 space-y-4">
+                      {exam?.grading_mode !== 'manual' && (
+                        isLemmaConfigured() ? (
+                          <button onClick={() => runGrading(session)} disabled={aiGrading === session.id}
+                            className="btn-secondary flex items-center gap-2 min-h-0 py-2.5 px-4 mb-2">
+                            <Sparkles size={16} />{aiGrading === session.id ? 'AI grading...' : 'Run AI Grading'}
+                          </button>
+                        ) : (
+                          <div className="text-xs text-gray-400 italic mb-2">
+                            AI grading needs the Lemma pod connected (VITE_LEMMA_* env vars not set) — grade manually below in the meantime.
+                          </div>
+                        )
+                      )}
                       {(exam?.questions || []).map((q, i) => {
                         const g: QuestionGrade = session.grading?.[q.id] || {}
                         return (

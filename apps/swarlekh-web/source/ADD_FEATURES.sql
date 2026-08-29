@@ -67,3 +67,21 @@ alter table exams add column if not exists grading_mode text default 'manual'
 
 -- Keyed by question id: { ai_score, ai_feedback, manual_score, teacher_remarks, final_score }
 alter table exam_sessions add column if not exists grading jsonb default '{}'::jsonb;
+
+-- =========================================================
+-- 3. Lemma pod mirroring references (for AI grading)
+-- =========================================================
+-- Supabase and the Lemma pod are two separate databases with their own
+-- auto-generated UUIDs for the same exam/question/session/answer. These
+-- columns remember the pod-side id for each Supabase row so we mirror data
+-- into the pod exactly once instead of duplicating it on every grading run.
+-- See src/lib/lemma.ts and LEMMA_INTEGRATION.md.
+
+alter table exams add column if not exists lemma_exam_id text;
+-- Maps a local question id (from the exams.questions JSON array, e.g. "q-1")
+-- to the corresponding pod-side questions.id (UUID).
+alter table exams add column if not exists lemma_question_ids jsonb default '{}'::jsonb;
+
+alter table exam_sessions add column if not exists lemma_session_id text;
+-- Maps a local question id to the corresponding pod-side student_answers.id (UUID).
+alter table exam_sessions add column if not exists lemma_answer_ids jsonb default '{}'::jsonb;

@@ -5,6 +5,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
     "jspdf": "^2.5.2",
+    "lemma-sdk": "^0.7.1",
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

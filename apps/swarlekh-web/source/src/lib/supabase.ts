@@ -47,6 +47,11 @@ export interface Exam {
   // LEMMA_INTEGRATION.md. Until then, ai/hybrid exams simply show
   // "not graded yet" for every answer.
   grading_mode?: GradingMode
+  // Set once this exam has been mirrored into the Lemma pod for AI grading.
+  // lemma_question_ids maps a local question id (e.g. "q-1") to the pod's
+  // own questions.id (UUID). See src/lib/lemma.ts.
+  lemma_exam_id?: string | null
+  lemma_question_ids?: Record<string, string>
 }
 
 export interface Question {
@@ -86,4 +91,9 @@ export interface ExamSession {
   created_at: string
   exam?: Exam
   student?: Profile
+  // Mirror refs into the Lemma pod, set once AI grading has been run for
+  // this session. lemma_answer_ids maps a local question id to the pod's
+  // student_answers.id (UUID). See src/lib/lemma.ts.
+  lemma_session_id?: string | null
+  lemma_answer_ids?: Record<string, string>
 }
