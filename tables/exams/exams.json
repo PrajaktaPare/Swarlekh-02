@@ -59,17 +59,15 @@
       "name": "status",
       "type": "ENUM",
       "required": true,
-      "type_params": {
-        "values": [
-          "draft",
-          "review",
-          "published",
-          "active",
-          "completed",
-          "archived"
-        ]
-      },
-      "default": "draft"
+      "default": "draft",
+      "options": [
+        "draft",
+        "review",
+        "published",
+        "active",
+        "completed",
+        "archived"
+      ]
     },
     {
       "name": "pdf_url",

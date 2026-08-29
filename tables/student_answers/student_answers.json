@@ -35,14 +35,12 @@
       "name": "answer_state",
       "type": "ENUM",
       "required": false,
-      "type_params": {
-        "values": [
-          "unanswered",
-          "answered",
-          "skipped"
-        ]
-      },
-      "default": "unanswered"
+      "default": "unanswered",
+      "options": [
+        "unanswered",
+        "answered",
+        "skipped"
+      ]
     },
     {
       "name": "ai_score",

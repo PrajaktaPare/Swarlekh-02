@@ -30,21 +30,19 @@
       "name": "type",
       "type": "ENUM",
       "required": true,
-      "type_params": {
-        "values": [
-          "mcq",
-          "fill_blank",
-          "true_false",
-          "one_word",
-          "one_sentence",
-          "short_answer",
-          "descriptive",
-          "essay",
-          "odd_one_out",
-          "matching",
-          "custom"
-        ]
-      }
+      "options": [
+        "mcq",
+        "fill_blank",
+        "true_false",
+        "one_word",
+        "one_sentence",
+        "short_answer",
+        "descriptive",
+        "essay",
+        "odd_one_out",
+        "matching",
+        "custom"
+      ]
     },
     {
       "name": "text",
@@ -55,13 +53,11 @@
       "name": "language",
       "type": "ENUM",
       "required": false,
-      "type_params": {
-        "values": [
-          "en",
-          "mr"
-        ]
-      },
-      "default": "en"
+      "default": "en",
+      "options": [
+        "en",
+        "mr"
+      ]
     },
     {
       "name": "marks",
@@ -101,13 +97,11 @@
       "name": "difficulty",
       "type": "ENUM",
       "required": false,
-      "type_params": {
-        "values": [
-          "easy",
-          "medium",
-          "hard"
-        ]
-      }
+      "options": [
+        "easy",
+        "medium",
+        "hard"
+      ]
     },
     {
       "name": "order_index",

@@ -29,16 +29,14 @@
       "name": "status",
       "type": "ENUM",
       "required": true,
-      "type_params": {
-        "values": [
-          "not_started",
-          "in_progress",
-          "time_expired",
-          "auto_submitted",
-          "submitted"
-        ]
-      },
-      "default": "not_started"
+      "default": "not_started",
+      "options": [
+        "not_started",
+        "in_progress",
+        "time_expired",
+        "auto_submitted",
+        "submitted"
+      ]
     },
     {
       "name": "current_question_index",

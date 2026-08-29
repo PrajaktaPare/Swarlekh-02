@@ -37,13 +37,11 @@
       "name": "grading_mode",
       "type": "ENUM",
       "required": false,
-      "type_params": {
-        "values": [
-          "ai",
-          "manual",
-          "hybrid"
-        ]
-      }
+      "options": [
+        "ai",
+        "manual",
+        "hybrid"
+      ]
     },
     {
       "name": "visible_to_student",
