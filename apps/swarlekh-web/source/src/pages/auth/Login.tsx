@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { Mic, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -9,21 +9,19 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email || !password) { toast.error('Please fill all fields'); return }
     setLoading(true)
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { toast.error(error.message); setLoading(false); return }
-    if (data.user) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
-      if (profile?.role === 'teacher') navigate('/teacher')
-      else if (profile?.role === 'admin') navigate('/admin')
-      else navigate('/student')
-      toast.success('Welcome back!')
-    }
+    // Don't navigate here — AuthContext's onAuthStateChange picks up the new
+    // session and loads the profile; AppRoutes' /login route redirects once
+    // that settles. Navigating here too caused a race: this component could
+    // reach a stale/default role before AuthContext's profile finished
+    // loading, bouncing between routes until Chrome throttled the redirects.
+    toast.success('Welcome back!')
     setLoading(false)
   }
 

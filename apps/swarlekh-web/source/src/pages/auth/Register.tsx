@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { Mic, GraduationCap, BookOpen } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -7,7 +7,6 @@ import toast from 'react-hot-toast'
 export default function Register() {
   const [form, setForm] = useState({ name:'', email:'', password:'', institution:'', role:'student' as 'teacher'|'student' })
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,8 +20,10 @@ export default function Register() {
     if (error) { toast.error(error.message); setLoading(false); return }
     if (data.user) {
       toast.success('Account created!')
-      if (form.role === 'teacher') navigate('/teacher')
-      else navigate('/student')
+      // Don't navigate here — same reasoning as Login.tsx: AuthContext picks
+      // up the new session and loads the profile, and AppRoutes' /register
+      // route redirects once that settles. A second, separately-timed
+      // navigate() here caused a redirect race.
     }
     setLoading(false)
   }
